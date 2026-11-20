@@ -48,6 +48,8 @@ fun FrameGenScreen(
     startCapture: (Boolean) -> Unit,
     stopCapture: () -> Unit,
     overlayAllowed: () -> Boolean,
+    overlayPermissionGranted: Boolean,
+    openAppInfo: () -> Unit,
     requestOverlayPermission: () -> Unit,
     overlayVisible: () -> Boolean,
     toggleOverlay: (Boolean) -> Boolean,
@@ -56,7 +58,7 @@ fun FrameGenScreen(
 ) {
     val status by CaptureTelemetry.status.collectAsState()
     var page by remember { mutableStateOf(Page.HOME) }
-    var allowed by remember { mutableStateOf(overlayAllowed()) }
+    val allowed = overlayPermissionGranted
     var overlayOn by remember { mutableStateOf(overlayVisible() && !fullscreenVisible()) }
     var fullscreenOn by remember { mutableStateOf(fullscreenVisible()) }
     var vulkanDetails by remember { mutableStateOf("Not probed; tap Run GPU probe") }
@@ -90,7 +92,7 @@ fun FrameGenScreen(
                         Text("FRAMEGEN LAB", color = Secondary, fontSize = 11.sp, letterSpacing = 1.1.sp)
                     }
                     Surface(color = Blue.copy(alpha = .13f), shape = RoundedCornerShape(30.dp)) {
-                        Text("v0.3 ALPHA", modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp), color = Blue, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        Text("v0.3.1 ALPHA", modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp), color = Blue, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                     }
                 }
             },
@@ -260,8 +262,7 @@ fun FrameGenScreen(
                         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                             Text("Show test overlay", modifier = Modifier.weight(1f), fontSize = 14.sp)
                             Switch(checked = overlayOn, onCheckedChange = { desired ->
-                                allowed = overlayAllowed()
-                                if (desired && !allowed) requestOverlayPermission()
+                                if (desired && !overlayAllowed()) requestOverlayPermission()
                                 else {
                                     overlayOn = toggleOverlay(desired)
                                     fullscreenOn = fullscreenVisible()
@@ -271,8 +272,7 @@ fun FrameGenScreen(
                         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                             Text("Fullscreen transparent touch test", modifier = Modifier.weight(1f), fontSize = 14.sp)
                             Switch(checked = fullscreenOn, onCheckedChange = { desired ->
-                                allowed = overlayAllowed()
-                                if (desired && !allowed) requestOverlayPermission()
+                                if (desired && !overlayAllowed()) requestOverlayPermission()
                                 else {
                                     fullscreenOn = toggleFullscreenOverlay(desired)
                                     overlayOn = overlayVisible() && !fullscreenVisible()
@@ -281,10 +281,22 @@ fun FrameGenScreen(
                         }
                         Text("Fullscreen mode uses a translucent 0.35-opacity, NOT_TOUCHABLE overlay. Try swipe and multitouch in a benign game and record whether the game still responds. Only one overlay at a time.", color = Secondary, fontSize = 11.sp)
                         if (!allowed) {
-                            TextButton(onClick = {
-                                allowed = overlayAllowed()
-                                if (!allowed) requestOverlayPermission()
-                            }) { Text("อนุญาต Overlay / ตรวจสอบสิทธิ์") }
+                            Spacer(Modifier.height(8.dp))
+                            Text("Android / ColorOS อาจบล็อก Overlay สำหรับ APK ที่ติดตั้งภายนอก Play Store", fontWeight = FontWeight.SemiBold, color = Color(0xFFFFD49C), fontSize = 12.sp)
+                            Text(
+                                "ถ้าพบข้อความ 'แอปถูกปฏิเสธไม่ให้เข้าถึง': ไปที่ ข้อมูลแอป > เมนู ⋮ > อนุญาตการตั้งค่าที่จำกัด (ถ้ามี) > ยืนยัน PIN/ลายนิ้วมือ แล้วกลับมาเปิดสิทธิ์แสดงผลอยู่บนแอปอื่นอีกครั้ง",
+                                color = Secondary, fontSize = 12.sp, lineHeight = 19.sp
+                            )
+                            Text(
+                                "อนุญาตเฉพาะ APK ที่คุณเชื่อถือ การเปิดสิทธิ์นี้ไม่จำเป็นสำหรับ Capture Test หรือ FG Lab และแอปไม่สามารถข้ามข้อจำกัดของระบบโดยอัตโนมัติได้",
+                                color = Secondary, fontSize = 11.sp, lineHeight = 17.sp
+                            )
+                            OutlinedButton(onClick = openAppInfo, modifier = Modifier.fillMaxWidth()) {
+                                Text("เปิดข้อมูลแอป (App info)")
+                            }
+                            TextButton(onClick = { requestOverlayPermission() }) {
+                                Text("ลองเปิดการตั้งค่า Overlay อีกครั้ง")
+                            }
                         }
                     }
                     PanelCard {

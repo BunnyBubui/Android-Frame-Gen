@@ -11,6 +11,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
+import androidx.compose.runtime.mutableStateOf
 import com.universalframegen.capture.FrameCaptureService
 import com.universalframegen.capture.CaptureStatus
 import com.universalframegen.capture.CaptureTelemetry
@@ -20,6 +21,7 @@ import com.universalframegen.overlay.OverlayProbe
 import com.universalframegen.ui.FrameGenScreen
 
 class MainActivity : ComponentActivity() {
+    private val overlayPermissionGranted = mutableStateOf(false)
     private lateinit var overlay: OverlayProbe
     private var pendingGpuMode = false
 
@@ -43,6 +45,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         overlay = OverlayProbe(applicationContext)
+        overlayPermissionGranted.value = Settings.canDrawOverlays(this)
         setContent {
             FrameGenScreen(
                 report = DeviceDiagnostics.scan(this),
@@ -59,6 +62,10 @@ class MainActivity : ComponentActivity() {
                         .setAction(FrameCaptureService.ACTION_STOP))
                 },
                 overlayAllowed = { Settings.canDrawOverlays(this) },
+                overlayPermissionGranted = overlayPermissionGranted.value,
+                openAppInfo = {
+                    startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:$packageName")))
+                },
                 requestOverlayPermission = {
                     val settings = Intent(
                         Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
@@ -76,6 +83,12 @@ class MainActivity : ComponentActivity() {
                 }
             )
         }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Re-check after returning from ColorOS / Android special access settings.
+        overlayPermissionGranted.value = Settings.canDrawOverlays(this)
     }
 
     override fun onDestroy() {

@@ -1,6 +1,6 @@
 # Universal FrameGen Lab — Phase 0–4 development prototype
 
-**Version: v0.3.0-alpha** · **Status: Source prototype; NOT a universal game FPS booster**
+**Version: v0.3.1-alpha** · **Status: Source prototype; NOT a universal game FPS booster**
 
 An Android non-root research app to investigate capture feasibility, frame interpolation, presentation cadence and overlay input on Android 12+. Its reference frame interpolation runs on **synthetic test images** and does not currently process or display captured game frames.
 
@@ -54,3 +54,12 @@ bash scripts/test-pacing-host.sh   # requires kotlinc + JDK
 - Capture does not store or transmit game frames or use Accessibility injection.
 
 See `docs/PHASE4_IMPLEMENTATION.md` for exact feature scope and device test steps.
+
+
+## Overlay permission on Android 15+ and ColorOS
+
+A manually installed APK may be blocked from requesting **Display over other apps**, showing **App was denied access**. This is an OS security restriction, not an app crash.
+
+If you trust the APK you installed, manually open **Settings → Apps → Universal FrameGen Lab → ⋮ → Allow restricted settings** (when available), authenticate, and return to **Display over other apps** to grant permission. The app never bypasses Android's restrictions, and **Capture Test and FG Lab can run without overlay permission**.
+
+Version 0.3.1 refreshes overlay permission after returning from Settings and links directly to App info with context-sensitive help. Actual game FPS generation remains unimplemented.
