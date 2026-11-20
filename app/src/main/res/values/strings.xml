@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Universal FrameGen Lab</string>
+    <string name="capture_channel_name">Screen capture diagnostic</string>
+    <string name="capture_channel_description">Active capture session for hardware diagnostics</string>
+</resources>
